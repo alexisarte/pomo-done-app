@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
-import './App.css'
+import './App.css';
 import Settings from './Settings';
+import SettingsContext from './SettingsContext';
 import Timer from './Timer';
 
-
 function App() {
-
   const [showSettings, setShowSettings] = useState(true);
 
   return (
     <main>
-      {showSettings ? <Settings /> : <Timer />}
-      
-
+      <SettingsContext.Provider
+        value={{
+          workMinutes: 45,
+          breakMinutes: 15,
+        }}>
+        {showSettings ? <Settings /> : <Timer />}
+      </SettingsContext.Provider>
     </main>
   );
 }

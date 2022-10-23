@@ -1,8 +1,10 @@
 // import ReactSlider from 'react-slider';
+import { useContext } from 'react';
 import ReactSlider from 'react-slider'
 import './Slider.css';
 
 function Settings() {
+  const settingsInfo = useContext(SettingsContext);
   return (
     <div style={{ textAlign: 'left' }}>
       <label>work minutes:</label>
