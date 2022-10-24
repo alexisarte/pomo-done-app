@@ -8,7 +8,8 @@ import SettingsContext from './SettingsContext';
 
 function Timer() {
   const settingsInfo = useContext(SettingsContext);
-  const [isPaused, setIsPaused] = useState(true);
+
+  const [isPaused, setIsPaused] = useState(false);
   const [mode, setMode] = useState('work'); // 'work' or 'break'
   const [secondsLeft, setSecondsLeft] = useState(0);
 
@@ -17,6 +18,7 @@ function Timer() {
   const isPausedRef = useRef(isPaused);
   isPausedRef.current = isPaused;
   const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   function tick() {
     secondsLeftRef.current--;
@@ -28,30 +30,49 @@ function Timer() {
   }
 
   function switchMode() {
-    const nextMode = mode === 'work' ? 'break' : 'work';
+    const nextMode = modeRef.current === 'work' ? 'break' : 'work';
+    const nextSeconds =
+      (nextMode === 'work'
+        ? settingsInfo.workMinutes
+        : settingsInfo.breakMinutes) * 60;
     setMode(nextMode);
-    const nextSecondsLeft = (nextMode === 'work' ? settingsInfo.workMinutes : settingsInfo.breakMinutes) * 60;
-    setSecondsLeft(nextSecondsLeft);
+    modeRef.current = nextMode;
+    setSecondsLeft(nextSeconds);
+    secondsLeftRef.current = nextSeconds;
   }
 
   useEffect(() => {
     initTimer();
-    setInterval(() => {
-      if (isPaused.current) {
+    const interval = setInterval(() => {
+      if (isPausedRef.current) {
         return;
       }
-      if (secondsLeft.current === 0) {
+      if (secondsLeftRef.current === 0) {
         switchMode();
       }
       tick();
-    }, 1000);
+    }, 10);
+    return () => clearInterval(interval);
   }, [settingsInfo]);
+
+  const totalSeconds =
+    mode === 'work'
+      ? settingsInfo.workMinutes * 60
+      : settingsInfo.breakMinutes * 60;
+
+  const percentage = Math.round((secondsLeft / totalSeconds) * 100);
+
+  const minutes = Math.floor(secondsLeft / 60);
+  let seconds = secondsLeft % 60;
+  if (seconds < 10) {
+    seconds = '0' + seconds;
+  }
 
   return (
     <div>
       <CircularProgressbar
-        value={60}
-        text={`${60}%`}
+        value={percentage}
+        text={`${minutes}:${seconds}`}
         styles={buildStyles({
           // Rotation of path and trail, in number of turns (0-1)
           rotation: 0.25,
@@ -69,13 +90,29 @@ function Timer() {
           // pathTransition: 'none',
 
           // Colors
-          pathColor: `rgba(62, 152, 199, ${60 / 100})`,
+          pathColor: mode === 'work' ? `#ff0000` : `#00ff00`,
           textColor: '#f88',
           trailColor: '#d6d6d6',
           backgroundColor: '#3e98c7',
         })}
       />
-      <div style={{ marginTop: '20px' }}>{isPaused ? <PlayButton /> : <PauseButton />}</div>
+      <div style={{ marginTop: '20px' }}>
+        {isPaused ? (
+          <PlayButton
+            onClick={() => {
+              setIsPaused(false);
+              isPausedRef.current = false;
+            }}
+          />
+        ) : (
+          <PauseButton
+            onClick={() => {
+              setIsPaused(true);
+              isPausedRef.current = true;
+            }}
+          />
+        )}
+      </div>
       <div style={{ marginTop: '20px' }}>
         <SettingsButton onClick={() => settingsInfo.setShowSettings(true)} />
       </div>
