@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, useRef } from 'react';
 import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import PauseButton from './PauseButton';
@@ -12,12 +12,39 @@ function Timer() {
   const [mode, setMode] = useState('work'); // 'work' or 'break'
   const [secondsLeft, setSecondsLeft] = useState(0);
 
+  const secondsLeftRef = useRef(secondsLeft);
+  secondsLeftRef.current = secondsLeft;
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
+  const modeRef = useRef(mode);
+
+  function tick() {
+    secondsLeftRef.current--;
+    setSecondsLeft(secondsLeftRef.current);
+  }
+
   function initTimer() {
     setSecondsLeft(settingsInfo.workMinutes * 60);
   }
 
+  function switchMode() {
+    const nextMode = mode === 'work' ? 'break' : 'work';
+    setMode(nextMode);
+    const nextSecondsLeft = (nextMode === 'work' ? settingsInfo.workMinutes : settingsInfo.breakMinutes) * 60;
+    setSecondsLeft(nextSecondsLeft);
+  }
+
   useEffect(() => {
     initTimer();
+    setInterval(() => {
+      if (isPaused.current) {
+        return;
+      }
+      if (secondsLeft.current === 0) {
+        switchMode();
+      }
+      tick();
+    }, 1000);
   }, [settingsInfo]);
 
   return (
