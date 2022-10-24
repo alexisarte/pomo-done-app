@@ -1,11 +1,25 @@
-// import React from 'react'
+import { useContext, useState, useEffect } from 'react';
 import { buildStyles, CircularProgressbar } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import PauseButton from './PauseButton';
 import PlayButton from './PlayButton';
 import SettingsButton from './SettingsButton';
+import SettingsContext from './SettingsContext';
 
 function Timer() {
+  const settingsInfo = useContext(SettingsContext);
+  const [isPaused, setIsPaused] = useState(true);
+  const [mode, setMode] = useState('work'); // 'work' or 'break'
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
+  function initTimer() {
+    setSecondsLeft(settingsInfo.workMinutes * 60);
+  }
+
+  useEffect(() => {
+    initTimer();
+  }, [settingsInfo]);
+
   return (
     <div>
       <CircularProgressbar
@@ -34,12 +48,9 @@ function Timer() {
           backgroundColor: '#3e98c7',
         })}
       />
-      <div style={{marginTop: '20px'}}>
-        <PlayButton />
-        <PauseButton />
-      </div>
-      <div style={{marginTop: '20px'}}>
-        <SettingsButton />
+      <div style={{ marginTop: '20px' }}>{isPaused ? <PlayButton /> : <PauseButton />}</div>
+      <div style={{ marginTop: '20px' }}>
+        <SettingsButton onClick={() => settingsInfo.setShowSettings(true)} />
       </div>
     </div>
   );
